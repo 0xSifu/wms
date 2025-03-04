@@ -1,0 +1,113 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: P@ssw0rd
+      POSTGRES_DB: wms-pmi
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    ports:
+      - '5432:5432'
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        order: stop-first
+
+  redis:
+    image: redis:latest
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning --requirepass P@ssw0rd
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        order: stop-first
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - backend
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: master123
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 1
+        order: stop-first
+
+  backend:
+    image: ghcr.io/pmi-project/warehouse-backend:${GIT_COMMIT_HASH:-latest}
+    networks:
+      - backend
+    ports:
+      - '9001:9001'
+    environment:
+      - APP_NAME=@pmi/wms-pmi-be
+      - APP_ENV=staging
+      - HTTP_ENABLE=true
+      - HTTP_HOST=0.0.0.0
+      - HTTP_PORT=9001
+      - HTTP_VERSIONING_ENABLE=true
+      - HTTP_VERSION=1
+      - ACCESS_TOKEN_SECRET_KEY=${ACCESS_TOKEN_SECRET_KEY}
+      - ACCESS_TOKEN_EXPIRED=1d
+      - REFRESH_TOKEN_SECRET_KEY=${REFRESH_TOKEN_SECRET_KEY}
+      - REFRESH_TOKEN_EXPIRED=7d
+      - RABBITMQ_URL=amqp://admin:master123@rabbitmq:5672
+      - RABBITMQ_AUTH_QUEUE=auth_queue
+      - RABBITMQ_TAG_QUEUE=tag_queue
+      - RABBITMQ_PRODUCT_QUEUE=product_queue
+      - DATABASE_URL=postgresql://postgres:P@ssw0rd@postgres:5432/wms-pmi
+    deploy:
+      replicas: 1
+      update_config:
+        order: start-first
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+  web:
+    image: ghcr.io/pmi-project/warehouse-client:${GIT_COMMIT_HASH:-latest}
+    networks:
+      - backend
+    ports:
+      - '3000:3000'
+    secrets:
+      - auth-secret
+    environment:
+      - AUTH_SECRET=/run/secrets/auth-secret
+      - NEXT_PUBLIC_DEVICE_HUB=${NEXT_PUBLIC_DEVICE_HUB}
+      - AUTH_URL_DEV=${AUTH_URL_DEV}
+    deploy:
+      replicas: 1
+      update_config:
+        order: start-first
+
+networks:
+  backend:
+    driver: overlay
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+
+secrets:
+  auth-secret:
+    external: true
