@@ -53,22 +53,19 @@ interface ProductFormProps {
   categories: any;
 }
 
-// Add this new function to fetch transaction data and extract unique EPCs
+// Update this function to work with the new tags endpoint response
 const fetchTransactionEPCs = async () => {
   const baseUrl = process.env.NEXT_PUBLIC_API_HUB;
   if (!baseUrl) {
     throw new Error('API URL is not configured');
   }
 
-  const response = await fetch(
-    `${baseUrl}/api/v1/transaction?page=1&limit=100`,
-    {
-      headers: {
-        accept: 'application/json',
-        'ngrok-skip-browser-warning': 'true'
-      }
+  const response = await fetch(`${baseUrl}/api/v1/tags?page=1&limit=100`, {
+    headers: {
+      accept: 'application/json',
+      'ngrok-skip-browser-warning': 'true'
     }
-  );
+  });
 
   if (!response.ok) {
     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -76,15 +73,28 @@ const fetchTransactionEPCs = async () => {
 
   const result = await response.json();
 
-  // Extract unique EPCs
-  const uniqueEpcs = Array.from(
-    new Set(result.data.map((transaction: any) => transaction.epc))
-  ).map((epc) => ({
-    id: epc, // Use EPC as the ID
-    tag: epc // Use EPC as the display text
-  }));
+  // Check for the correct response structure
+  if (!result.data || !result.data.data) {
+    throw new Error('Invalid response format from tags API');
+  }
 
-  return uniqueEpcs;
+  // Create a Map to ensure uniqueness by tag value
+  const uniqueTagsMap = new Map();
+
+  // Process each tag and only keep unique ones (by tag value)
+  result.data.data.forEach((tagItem: any) => {
+    if (!uniqueTagsMap.has(tagItem.tag)) {
+      uniqueTagsMap.set(tagItem.tag, {
+        id: tagItem.id, // Use the actual ID as the value
+        tag: tagItem.tag // Use the tag as the display text
+      });
+    }
+  });
+
+  // Convert Map to array
+  const uniqueTags = Array.from(uniqueTagsMap.values());
+
+  return uniqueTags;
 };
 
 export const ProductForm: React.FC<ProductFormProps> = ({
@@ -158,7 +168,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         throw new Error('API URL is not configured');
       }
 
-      const apiUrl = `${baseUrl}/api/v1/product${
+      const apiUrl = `${baseUrl}/api/v1/products${
         initialData ? `/${initialData.id}` : ''
       }`;
       const method = initialData ? 'PUT' : 'POST';
