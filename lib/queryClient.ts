@@ -9,6 +9,7 @@ export const queryClient = new QueryClient({
         const res = await fetch(`/api/${queryKey[0]}`, {
           headers: {
             'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true',
             Authorization: `Bearer ${session?.accessToken}`
           }
         });

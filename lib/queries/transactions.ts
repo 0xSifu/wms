@@ -8,7 +8,8 @@ const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_HUB || 'http://localhost:9001',
   headers: {
     'Content-Type': 'application/json',
-  },
+    'ngrok-skip-browser-warning': 'true'
+  }
 });
 
 interface TagsResponse {
@@ -55,7 +56,7 @@ interface TransactionData {
 
 export const useAddTransaction = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (data: TransactionData) => {
       const response = await api.post('/api/v1/transaction/add', data);
@@ -63,7 +64,7 @@ export const useAddTransaction = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    },
+    }
   });
 };
 
@@ -75,7 +76,8 @@ export function useMutationTx() {
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
           },
           body: JSON.stringify(data)
         }
@@ -96,10 +98,15 @@ export function useMutationTx() {
   });
 }
 
-export async function fetchTransactions(page: number, pageLimit: number): Promise<TransactionResponse> {
-  const response = await api.get(`/api/v1/transaction/list?page=${page}&perPage=${pageLimit}`);
+export async function fetchTransactions(
+  page: number,
+  pageLimit: number
+): Promise<TransactionResponse> {
+  const response = await api.get(
+    `/api/v1/transaction/list?page=${page}&perPage=${pageLimit}`
+  );
   const data = response.data;
-  
+
   return {
     transactions: data.data,
     totalTransactions: data.meta.total,
@@ -119,26 +126,27 @@ export interface BulkTransactionData {
 
 export const useSaveTransactionsBulk = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (data: BulkTransactionData) => {
       const response = await fetch('/api/transaction/save-bulk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(data)
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to save transactions');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    },
+    }
   });
 };
