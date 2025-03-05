@@ -2,7 +2,6 @@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tag } from '@/constants/data';
 import { ColumnDef } from '@tanstack/react-table';
-import { CellAction } from './cell-action';
 
 export const columns: ColumnDef<Tag>[] = [
   {
@@ -43,9 +42,5 @@ export const columns: ColumnDef<Tag>[] = [
   {
     accessorKey: 'scanCount',
     header: 'SCAN COUNT'
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => <CellAction data={row.original} />
   }
 ];
