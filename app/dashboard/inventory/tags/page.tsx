@@ -53,7 +53,7 @@ export default function Page() {
       <div className="space-y-4">
         <Breadcrumbs items={breadcrumbItems} />
 
-        <div className="flex items-start justify-between">
+        {/* <div className="flex items-start justify-between">
           <Heading
             title="Tags"
             description="Manage tags, the initial data captured from the scanner, to track and process scanned items effectively."
@@ -65,7 +65,7 @@ export default function Page() {
           >
             <Plus className="mr-2 h-4 w-4" /> Add New
           </Link>
-        </div>
+        </div> */}
         <Separator />
 
         <TagTable
