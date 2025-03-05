@@ -34,7 +34,12 @@ export function useTagQuery(tagId: string) {
       )}`;
       console.log('Constructed URL:', url);
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          accept: 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -79,7 +84,12 @@ export function useTagsList(page: number, pageLimit: number) {
         searchQuery
       )}`;
 
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: {
+          accept: 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
 
       if (!res.ok) {
         throw new Error('Failed to fetch tags');

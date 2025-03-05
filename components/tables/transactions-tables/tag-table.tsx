@@ -34,12 +34,15 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { useTransactionQuery, useAddTransaction } from '@/lib/queries/transactions';
-import { pusherChannel, PUSHER_CONSTANTS } from '@/lib/pusher';
+import {
+  useTransactionQuery,
+  useAddTransaction
+} from '@/lib/queries/transactions';
+// import { pusherChannel, PUSHER_CONSTANTS } from '@/lib/pusher';
 import { useQueryClient } from '@tanstack/react-query';
 import { Transaction } from './columns';
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import Pusher from 'pusher-js';
 
 interface DataTableProps {
@@ -66,7 +69,7 @@ export function TransactionTable({
   pageNo,
   searchKey,
   pageCount,
-  pageLimit,
+  pageLimit
 }: DataTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -77,17 +80,21 @@ export function TransactionTable({
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const { data: transactionData } = useTransactionQuery(pageNo, pageLimit);
 
-  const [{ pageIndex, pageSize }, setPagination] = React.useState<PaginationState>({
-    pageIndex: pageNo - 1,
-    pageSize: pageLimit
-  });
+  const [{ pageIndex, pageSize }, setPagination] =
+    React.useState<PaginationState>({
+      pageIndex: pageNo - 1,
+      pageSize: pageLimit
+    });
 
   const [isCountMode, setIsCountMode] = useState(false);
 
   // Modify the memo to handle grouped transactions
   const allTransactions = React.useMemo(() => {
-    const baseTransactions = [...transactions, ...(transactionData?.transactions ?? [])] as Transaction[];
-    
+    const baseTransactions = [
+      ...transactions,
+      ...(transactionData?.transactions ?? [])
+    ] as Transaction[];
+
     if (!isCountMode) {
       return baseTransactions;
     }
@@ -133,25 +140,28 @@ export function TransactionTable({
     });
 
     const channel = pusher.subscribe('rfid-scan');
-    channel.bind('tag-scanned', (data: {
-      timestamp: string;
-      epc: string;
-      rssi: string;
-      mode: string;
-    }) => {
-      // Convert the data to match the backend DTO format
-      const transactionData = {
-        Tag: data.epc,
-        DeviceNo: 1, // Default device number
-        AntennaNo: 1, // Default antenna number
-        Timestamp: data.timestamp,
-        ScanCount: 1, // Default scan count
-        mode: data.mode
-      };
+    channel.bind(
+      'tag-scanned',
+      (data: {
+        timestamp: string;
+        epc: string;
+        rssi: string;
+        mode: string;
+      }) => {
+        // Convert the data to match the backend DTO format
+        const transactionData = {
+          Tag: data.epc,
+          DeviceNo: 1, // Default device number
+          AntennaNo: 1, // Default antenna number
+          Timestamp: data.timestamp,
+          ScanCount: 1, // Default scan count
+          mode: data.mode
+        };
 
-      // Send to backend
-      addTransaction.mutate(transactionData);
-    });
+        // Send to backend
+        addTransaction.mutate(transactionData);
+      }
+    );
 
     return () => {
       channel.unbind_all();
@@ -161,7 +171,7 @@ export function TransactionTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <Input
           placeholder={`Search ${searchKey}...`}
           value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ''}
@@ -170,7 +180,7 @@ export function TransactionTable({
           }
           className="w-full md:max-w-sm"
         />
-        
+
         <div className="flex items-center space-x-2">
           <Switch
             id="count-mode"
