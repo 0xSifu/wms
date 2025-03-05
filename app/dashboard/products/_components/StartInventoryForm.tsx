@@ -67,7 +67,8 @@ export function StartInventoryForm({
       const response = await fetch('http://localhost:9001/api/v1/batch/add', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
         },
         body: JSON.stringify(payload)
       });

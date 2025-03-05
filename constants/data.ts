@@ -145,12 +145,12 @@ export const navItems: NavItem[] = [
     icon: 'package',
     label: 'inventory',
     submenu: [
-      {
-        title: 'Tags',
-        href: '/dashboard/inventory/tags',
-        icon: 'package',
-        label: 'tags'
-      },
+      // {
+      //   title: 'Tags',
+      //   href: '/dashboard/inventory/tags',
+      //   icon: 'package',
+      //   label: 'tags'
+      // },
       {
         title: 'Products',
         href: '/dashboard/inventory/products',

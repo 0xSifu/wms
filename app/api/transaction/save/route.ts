@@ -6,13 +6,14 @@ const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_HUB || 'http://localhost:9001',
   headers: {
     'Content-Type': 'application/json',
-  },
+    'ngrok-skip-browser-warning': 'true'
+  }
 });
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    
+
     // Map the transaction data to the expected format
     const transactionData = {
       Tag: body.epc,
@@ -25,19 +26,25 @@ export async function POST(request: Request) {
 
     // Send the data to the backend API
     const response = await api.post('/api/v1/transaction/add', transactionData);
-    
-    return NextResponse.json({ 
-      success: true, 
-      data: response.data,
-      message: 'Transaction saved successfully' 
-    }, { status: 200 });
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: response.data,
+        message: 'Transaction saved successfully'
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Error saving transaction:', error);
-    
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Failed to save transaction',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Failed to save transaction',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
   }
-} 
+}

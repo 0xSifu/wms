@@ -25,7 +25,6 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { useToast } from '../ui/use-toast';
-import { fetchTagData } from '@/lib/list-tag';
 
 export const IMG_MAX_LIMIT = 3;
 const formSchema = z.object({
@@ -53,6 +52,40 @@ interface ProductFormProps {
   initialData: Product | null;
   categories: any;
 }
+
+// Add this new function to fetch transaction data and extract unique EPCs
+const fetchTransactionEPCs = async () => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_HUB;
+  if (!baseUrl) {
+    throw new Error('API URL is not configured');
+  }
+
+  const response = await fetch(
+    `${baseUrl}/api/v1/transaction?page=1&limit=100`,
+    {
+      headers: {
+        accept: 'application/json',
+        'ngrok-skip-browser-warning': 'true'
+      }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
+
+  const result = await response.json();
+
+  // Extract unique EPCs
+  const uniqueEpcs = Array.from(
+    new Set(result.data.map((transaction: any) => transaction.epc))
+  ).map((epc) => ({
+    id: epc, // Use EPC as the ID
+    tag: epc // Use EPC as the display text
+  }));
+
+  return uniqueEpcs;
+};
 
 export const ProductForm: React.FC<ProductFormProps> = ({
   initialData,
@@ -87,22 +120,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     const fetchData = async () => {
       setLoading(true);
       try {
-        const tags = await fetchTagData();
-        if (Array.isArray(tags)) {
-          setTags(tags);
-        } else {
-          toast({
-            variant: 'destructive',
-            title: 'Error',
-            description: 'Failed to load transaction tags'
-          });
-        }
+        // Replace fetchTagData with our new function
+        const uniqueEpcs = await fetchTransactionEPCs();
+        setTags(uniqueEpcs);
       } catch (error) {
-        console.error('Failed to fetch tag data:', error);
+        console.error('Failed to fetch transaction data:', error);
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: error instanceof Error ? error.message : 'Failed to load transaction tags'
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Failed to load transaction tags'
         });
       } finally {
         setLoading(false);
@@ -129,13 +158,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         throw new Error('API URL is not configured');
       }
 
-      const apiUrl = `${baseUrl}/api/v1/product${initialData ? `/${initialData.id}` : ''}`;
+      const apiUrl = `${baseUrl}/api/v1/product${
+        initialData ? `/${initialData.id}` : ''
+      }`;
       const method = initialData ? 'PUT' : 'POST';
 
       const response = await fetch(apiUrl, {
         method,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
         },
         body: JSON.stringify(payload)
       });
@@ -143,7 +175,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || `HTTP error! Status: ${response.status}`);
+        throw new Error(
+          result.message || `HTTP error! Status: ${response.status}`
+        );
       }
 
       if (!result.data) {
@@ -154,14 +188,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       router.push(`/dashboard/inventory/products`);
       toast({
         title: 'Success',
-        description: `Product ${initialData ? 'updated' : 'created'} successfully.`
+        description: `Product ${
+          initialData ? 'updated' : 'created'
+        } successfully.`
       });
     } catch (error) {
       console.error('Failed to submit product:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to save product'
+        description:
+          error instanceof Error ? error.message : 'Failed to save product'
       });
     } finally {
       setLoading(false);
@@ -171,7 +208,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const onDelete = async () => {
     try {
       setLoading(true);
-      
+
       if (!initialData?.id) {
         throw new Error('No product ID provided for deletion');
       }
@@ -181,12 +218,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         throw new Error('API URL is not configured');
       }
 
-      const response = await fetch(`${baseUrl}/api/v1/product/${initialData.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `${baseUrl}/api/v1/product/${initialData.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          }
         }
-      });
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -204,7 +245,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to delete product'
+        description:
+          error instanceof Error ? error.message : 'Failed to delete product'
       });
     } finally {
       setLoading(false);
@@ -292,11 +334,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 <FormItem>
                   <FormLabel>Unit</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
-                      disabled={loading} 
+                    <Input
+                      type="number"
+                      disabled={loading}
                       {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                      onChange={(e) =>
+                        field.onChange(parseInt(e.target.value, 10))
+                      }
                     />
                   </FormControl>
                   <FormMessage />
@@ -338,9 +382,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           </div>
           <Button disabled={loading} className="ml-auto" type="submit">
             {loading ? (
-              <>
-                {initialData ? 'Saving...' : 'Creating...'}
-              </>
+              <>{initialData ? 'Saving...' : 'Creating...'}</>
             ) : (
               action
             )}

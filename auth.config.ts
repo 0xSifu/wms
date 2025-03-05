@@ -23,7 +23,10 @@ const authConfig = {
           {
             method: 'POST',
             body: JSON.stringify(credentials),
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+              'Content-Type': 'application/json',
+              'ngrok-skip-browser-warning': 'true'
+            }
           }
         );
 

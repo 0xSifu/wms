@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
+  DialogFooter
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,10 +22,10 @@ interface CreateBatchDialogProps {
   buttonLabel?: string;
 }
 
-export function CreateBatchDialog({ 
-  selectedTransactions, 
+export function CreateBatchDialog({
+  selectedTransactions,
   onBatchCreated,
-  buttonLabel = "Create Batch" 
+  buttonLabel = 'Create Batch'
 }: CreateBatchDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
@@ -39,24 +39,25 @@ export function CreateBatchDialog({
     baseURL: process.env.NEXT_PUBLIC_API_HUB || 'http://localhost:9001',
     headers: {
       'Content-Type': 'application/json',
-    },
+      'ngrok-skip-browser-warning': 'true'
+    }
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name) {
       toast({
-        title: "Validation Error",
-        description: "Batch name is required",
-        variant: "destructive"
+        title: 'Validation Error',
+        description: 'Batch name is required',
+        variant: 'destructive'
       });
       return;
     }
-    
+
     // Get the selected transactions from localStorage
     let transactionsToProcess = selectedTransactions;
-    
+
     if (selectedTransactions.length === 0 && typeof window !== 'undefined') {
       try {
         const storedTransactions = localStorage.getItem('selectedTransactions');
@@ -67,26 +68,26 @@ export function CreateBatchDialog({
         console.error('Error parsing stored transactions:', error);
       }
     }
-    
+
     if (transactionsToProcess.length === 0) {
       toast({
-        title: "No Transactions Selected",
-        description: "Please select at least one transaction to create a batch",
-        variant: "destructive"
+        title: 'No Transactions Selected',
+        description: 'Please select at least one transaction to create a batch',
+        variant: 'destructive'
       });
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
-      
+
       // Clear previous saved transaction IDs
       setSavedTransactionIds([]);
-      
+
       // First save all transactions and collect their UUIDs
       const newTransactionIds: string[] = [];
       const errors = [];
-      
+
       // Process transactions sequentially to maintain order
       for (const transaction of transactionsToProcess) {
         try {
@@ -95,7 +96,7 @@ export function CreateBatchDialog({
             newTransactionIds.push(transaction.id.toString());
             continue;
           }
-          
+
           // Convert to the format expected by the API
           const apiTransaction = {
             epc: transaction.epc,
@@ -106,10 +107,13 @@ export function CreateBatchDialog({
             scanCount: transaction.count || 1,
             mode: transaction.mode || 'single'
           };
-          
+
           // Send to the backend API and wait for response
-          const response = await api.post('/api/v1/transaction', apiTransaction);
-          
+          const response = await api.post(
+            '/api/v1/transaction',
+            apiTransaction
+          );
+
           if (response.data?.data?.id) {
             // Store the UUID from the response
             newTransactionIds.push(response.data.data.id);
@@ -125,53 +129,55 @@ export function CreateBatchDialog({
           });
         }
       }
-      
+
       // Update state with collected UUIDs
       setSavedTransactionIds(newTransactionIds);
-      
+
       if (newTransactionIds.length === 0) {
         throw new Error('Failed to save any transactions');
       }
 
       console.log('Transaction UUIDs to be added to batch:', newTransactionIds);
-      
+
       // Now create the batch with the collected UUIDs
       const batchData = {
         name,
         description,
         transactionIds: newTransactionIds
       };
-      
+
       // Create the batch with the collected UUIDs
       const batchResponse = await api.post('/api/v1/batch', batchData);
-      
+
       // Show success message
       toast({
-        title: "Batch Created",
-        description: `Successfully created batch "${name}" with ${newTransactionIds.length} transactions${errors.length > 0 ? ` (${errors.length} failed)` : ''}`,
-        variant: errors.length === 0 ? "default" : "destructive"
+        title: 'Batch Created',
+        description: `Successfully created batch "${name}" with ${
+          newTransactionIds.length
+        } transactions${errors.length > 0 ? ` (${errors.length} failed)` : ''}`,
+        variant: errors.length === 0 ? 'default' : 'destructive'
       });
-      
+
       // Clear localStorage after successful processing
       if (typeof window !== 'undefined') {
         localStorage.removeItem('selectedTransactions');
       }
-      
+
       // Close dialog and notify parent
       setOpen(false);
       onBatchCreated();
-      
+
       // Reset form
       setName('');
       setDescription('');
       setSavedTransactionIds([]);
-      
     } catch (error) {
       console.error('Error creating batch:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : 'Failed to create batch',
-        variant: "destructive"
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to create batch',
+        variant: 'destructive'
       });
     } finally {
       setIsSubmitting(false);
@@ -181,10 +187,7 @@ export function CreateBatchDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="default" 
-          disabled={selectedTransactions.length === 0}
-        >
+        <Button variant="default" disabled={selectedTransactions.length === 0}>
           {buttonLabel}
         </Button>
       </DialogTrigger>
@@ -214,8 +217,9 @@ export function CreateBatchDialog({
             />
           </div>
           <div className="pt-2">
-            <p className="text-sm text-muted-foreground mb-2">
-              Creating a batch with {selectedTransactions.length} selected transaction{selectedTransactions.length !== 1 ? 's' : ''}
+            <p className="mb-2 text-sm text-muted-foreground">
+              Creating a batch with {selectedTransactions.length} selected
+              transaction{selectedTransactions.length !== 1 ? 's' : ''}
             </p>
             <DialogFooter>
               <Button
