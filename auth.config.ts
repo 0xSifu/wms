@@ -22,7 +22,7 @@ const authConfig = {
       },
       async authorize(credentials, req) {
         const response = await fetch(
-          `${process.env.AUTH_URL_DEV}/api/v1/auth/login`,
+          `${process.env.NEXTAUTH_URL}/api/v1/auth/login`,
           {
             method: 'POST',
             body: JSON.stringify(credentials),

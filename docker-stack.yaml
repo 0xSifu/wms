@@ -88,9 +88,9 @@ services:
     secrets:
       - auth-secret
     environment:
-      - AUTH_SECRET=/run/secrets/auth-secret
+      - NEXTAUTH_SECRET=/run/secrets/auth-secret
       - NEXT_PUBLIC_DEVICE_HUB=${NEXT_PUBLIC_DEVICE_HUB}
-      - AUTH_URL_DEV=${AUTH_URL_DEV}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
     deploy:
       replicas: 1
       update_config:
