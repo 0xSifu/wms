@@ -33,10 +33,12 @@ export default function UserAuthForm() {
 
   const onSubmit = async (data: UserFormValue) => {
     setLoading(true);
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL || 'http://103.174.115.64:3000';
     signIn('credentials', {
       email: data.email,
       password: data.password,
-      callbackUrl: callbackUrl ?? '/dashboard'
+      callbackUrl: callbackUrl ?? `${baseUrl}/dashboard`
     });
   };
 

@@ -2,6 +2,9 @@ import { NextAuthConfig } from 'next-auth';
 import CredentialProvider from 'next-auth/providers/credentials';
 import GithubProvider from 'next-auth/providers/github';
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL || 'http://103.174.115.64:3000';
+
 const authConfig = {
   providers: [
     GithubProvider({
@@ -53,14 +56,19 @@ const authConfig = {
     },
     async session({ session, token }) {
       session.user = token.user as any;
-
       return session;
     }
   },
   pages: {
-    signIn: '/' //sigin page
+    signIn: '/' //signin page
   },
   trustHost: true
 } satisfies NextAuthConfig;
+
+// Export config with base URL
+export const authOptions = {
+  ...authConfig,
+  basePath: BASE_URL
+};
 
 export default authConfig;

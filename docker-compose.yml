@@ -17,6 +17,7 @@ services:
       - NEXT_PUBLIC_PUSHER_APP_ID=${NEXT_PUBLIC_PUSHER_APP_ID}
       - NEXT_PUBLIC_PUSHER_KEY=${NEXT_PUBLIC_PUSHER_KEY}
       - NEXT_PUBLIC_PUSHER_CLUSTER=${NEXT_PUBLIC_PUSHER_CLUSTER}
+      - NEXT_PUBLIC_BASE_URL=http://103.174.115.64:3000
     networks:
       - frontend
     restart: unless-stopped
