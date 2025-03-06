@@ -8,7 +8,8 @@ import {
   getPaginationRowModel,
   useReactTable
 } from '@tanstack/react-table';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Pusher from 'pusher-js';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,6 +95,53 @@ export function ProductTable<TData, TValue>({
       pageSize: fallbackPerPage
     });
 
+  const [localData, setLocalData] = useState<TData[]>(data);
+
+  // Update local data when prop data changes
+  useEffect(() => {
+    setLocalData(data);
+  }, [data]);
+
+  // Subscribe to Pusher events for real-time updates
+  useEffect(() => {
+    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+
+    if (!pusherKey || !pusherCluster) {
+      console.error('Pusher configuration is missing');
+      return;
+    }
+
+    const pusher = new Pusher(pusherKey, {
+      cluster: pusherCluster
+    });
+
+    const channel = pusher.subscribe('product-updates');
+
+    channel.bind(
+      'unit-updated',
+      (data: { productId: string; newUnit: number; tagId: string }) => {
+        setLocalData((currentData) =>
+          currentData.map((item) => {
+            const product = item as any; // Type assertion for dynamic access
+            if (product.id === data.productId || product.tagId === data.tagId) {
+              return {
+                ...item,
+                unit: data.newUnit
+              };
+            }
+            return item;
+          })
+        );
+      }
+    );
+
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+    };
+  }, []);
+
   React.useEffect(() => {
     router.push(
       `${pathname}?${createQueryString({
@@ -109,7 +157,7 @@ export function ProductTable<TData, TValue>({
   }, [pageIndex, pageSize]);
 
   const table = useReactTable({
-    data,
+    data: localData,
     columns,
     pageCount: pageCount ?? -1,
     getCoreRowModel: getCoreRowModel(),
