@@ -76,8 +76,8 @@ export function HistoryTransactionTable({
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['transactionHistory', currentPage, pageSize],
     queryFn: () => fetchHistoryTransactions(currentPage, pageSize),
-    staleTime: 60000, // 1 minute
-    keepPreviousData: true // Keep previous data while loading new data
+    staleTime: 60000 // 1 minute
+    // keepPreviousData: true // Keep previous data while loading new data
   });
 
   const transactions = data?.data || [];

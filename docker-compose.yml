@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  wms-app-prod:
+    container_name: wms-app-prod
+    build:
+      context: .
+      target: release
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - AUTH_SECRET=${AUTH_SECRET}
+      - AUTH_URL_DEV=${AUTH_URL_DEV}
+      - NEXT_PUBLIC_DEVICE_HUB=${NEXT_PUBLIC_DEVICE_HUB}
+      - NEXT_PUBLIC_API_HUB=${NEXT_PUBLIC_API_HUB}
+      - NEXT_PUBLIC_PUSHER_APP_ID=${NEXT_PUBLIC_PUSHER_APP_ID}
+      - NEXT_PUBLIC_PUSHER_KEY=${NEXT_PUBLIC_PUSHER_KEY}
+      - NEXT_PUBLIC_PUSHER_CLUSTER=${NEXT_PUBLIC_PUSHER_CLUSTER}
+    networks:
+      - frontend
+    restart: unless-stopped
+
+networks:
+  frontend:
+    driver: bridge
