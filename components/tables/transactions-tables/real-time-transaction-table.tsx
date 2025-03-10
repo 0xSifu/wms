@@ -290,73 +290,84 @@ export function RealTimeTransactionTable({
           </div>
         </div>
       </div>
-      <table className="w-full">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="h-12 px-4">
-              <Checkbox
-                checked={
-                  selectedRows.length > 0 &&
-                  selectedRows.length === transactions.length
-                }
-                onCheckedChange={(checked) =>
-                  handleSelectAll(checked as boolean)
-                }
-              />
-            </th>
-            <th className="px-4 text-left">EPC</th>
-            <th className="px-4 text-left">RSSI</th>
-            <th className="px-4 text-left">Timestamp</th>
-            <th className="px-4 text-left">Mode</th>
-            <th className="px-4 text-left">Status</th>
-            {isCountMode && <th className="px-4 text-left">Count</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {(isCountMode ? processedTransactions : transactions).map(
-            (transaction) => {
-              // Ensure id is a number
-              const id = transaction.id;
-              if (id === undefined) return null;
-
-              return (
-                <tr key={id} className="border-b">
-                  <td className="h-12 px-4">
-                    <Checkbox
-                      checked={selectedRows.some((t) => t.id === id)}
-                      onCheckedChange={(checked) =>
-                        handleRowSelect(transaction, checked as boolean)
-                      }
-                    />
-                  </td>
-                  <td className="px-4">{transaction.epc}</td>
-                  <td className="px-4">{transaction.rssi} dBm</td>
-                  <td className="px-4">{transaction.timestamp}</td>
-                  <td className="px-4">{transaction.mode}</td>
-                  <td className="px-4">
-                    <Badge variant={transaction.isTemp ? 'outline' : 'default'}>
-                      {transaction.isTemp ? 'Pending' : 'Saved'}
-                    </Badge>
-                  </td>
-                  {isCountMode && (
-                    <td className="px-4 font-medium">
-                      {epcCounts[transaction.epc] || 1}
-                    </td>
-                  )}
-                </tr>
-              );
-            }
-          )}
-          {(isCountMode ? processedTransactions : transactions).length ===
-            0 && (
+      <div className="relative">
+        <table className="w-full">
+          <thead className="sticky top-0 z-10 border-b bg-muted/50">
             <tr>
-              <td colSpan={isCountMode ? 7 : 6} className="h-24 text-center">
-                No transactions yet. Waiting for RFID scans...
-              </td>
+              <th className="h-12 px-4">
+                <Checkbox
+                  checked={
+                    selectedRows.length > 0 &&
+                    selectedRows.length === transactions.length
+                  }
+                  onCheckedChange={(checked) =>
+                    handleSelectAll(checked as boolean)
+                  }
+                />
+              </th>
+              <th className="px-4 text-left">EPC</th>
+              <th className="px-4 text-left">RSSI</th>
+              <th className="px-4 text-left">Timestamp</th>
+              <th className="px-4 text-left">Mode</th>
+              <th className="px-4 text-left">Status</th>
+              {isCountMode && <th className="px-4 text-left">Count</th>}
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+        </table>
+        <div className="max-h-[500px] overflow-y-auto">
+          <table className="w-full">
+            <tbody>
+              {(isCountMode ? processedTransactions : transactions).map(
+                (transaction) => {
+                  // Ensure id is a number
+                  const id = transaction.id;
+                  if (id === undefined) return null;
+
+                  return (
+                    <tr key={id} className="border-b">
+                      <td className="h-12 px-4">
+                        <Checkbox
+                          checked={selectedRows.some((t) => t.id === id)}
+                          onCheckedChange={(checked) =>
+                            handleRowSelect(transaction, checked as boolean)
+                          }
+                        />
+                      </td>
+                      <td className="px-4">{transaction.epc}</td>
+                      <td className="px-4">{transaction.rssi} dBm</td>
+                      <td className="px-4">{transaction.timestamp}</td>
+                      <td className="px-4">{transaction.mode}</td>
+                      <td className="px-4">
+                        <Badge
+                          variant={transaction.isTemp ? 'outline' : 'default'}
+                        >
+                          {transaction.isTemp ? 'Pending' : 'Saved'}
+                        </Badge>
+                      </td>
+                      {isCountMode && (
+                        <td className="px-4 font-medium">
+                          {epcCounts[transaction.epc] || 1}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                }
+              )}
+              {(isCountMode ? processedTransactions : transactions).length ===
+                0 && (
+                <tr>
+                  <td
+                    colSpan={isCountMode ? 7 : 6}
+                    className="h-24 text-center"
+                  >
+                    No transactions yet. Waiting for RFID scans...
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

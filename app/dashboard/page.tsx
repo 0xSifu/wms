@@ -1,9 +1,10 @@
+'use client';
+
 import { AreaGraph } from '@/components/charts/area-graph';
 import { BarGraph } from '@/components/charts/bar-graph';
 import { PieGraph } from '@/components/charts/pie-graph';
 import { CalendarDateRangePicker } from '@/components/date-range-picker';
 import PageContainer from '@/components/layout/page-container';
-import { RecentSales } from '@/components/recent-sales';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,18 +14,66 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useEffect, useState } from 'react';
 
-export default function page() {
+interface Statistics {
+  totalProducts: number;
+  totalTagsScanned: number;
+  totalTagsUnsync: number;
+  totalTransactions: number;
+  productsWithTags: number;
+  productsWithoutTags: number;
+  averageScansPerTag: number;
+  lastScanTimestamp: string;
+  mostScannedTag: {
+    epc: string;
+    scanCount: number;
+  };
+  productWithMostTags: {
+    productName: string;
+    tagCount: number;
+  };
+  transactionsLast24Hours: number;
+  newTagsLast24Hours: number;
+  dailyTransactions: Array<{ label: string; value: number }>;
+  hourlyTransactions: Array<{ label: string; value: number }>;
+  productTypeDistribution: Array<{ label: string; value: number }>;
+  tagScanTrends: Array<{ label: string; value: number }>;
+}
+
+export default function DashboardPage() {
+  const [stats, setStats] = useState<Statistics | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(
+          'http://localhost:9001/api/v1/products/statistics'
+        );
+        const result = await response.json();
+        setStats(result.data);
+      } catch (error) {
+        console.error('Error fetching statistics:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (!stats) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <PageContainer scrollable={true}>
       <div className="space-y-2">
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-2xl font-bold tracking-tight">
-            Hi, Welcome back 👋
+            WMS Dashboard Overview 📊
           </h2>
           <div className="hidden items-center space-x-2 md:flex">
             <CalendarDateRangePicker />
-            <Button>Download</Button>
+            <Button>Download Report</Button>
           </div>
         </div>
         <Tabs defaultValue="overview" className="space-y-4">
@@ -39,7 +88,7 @@ export default function page() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Total Revenue
+                    Total Products
                   </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -55,16 +104,18 @@ export default function page() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">$45,231.89</div>
+                  <div className="text-2xl font-bold">
+                    {stats.totalProducts}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +20.1% from last month
+                    {stats.productsWithTags} with tags
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Subscriptions
+                    Total Tags
                   </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -82,15 +133,19 @@ export default function page() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">+2350</div>
+                  <div className="text-2xl font-bold">
+                    {stats.totalTagsScanned}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +180.1% from last month
+                    {stats.totalTagsUnsync} unsynced
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Sales</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Transactions
+                  </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -106,16 +161,18 @@ export default function page() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">+12,234</div>
+                  <div className="text-2xl font-bold">
+                    {stats.totalTransactions}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +19% from last month
+                    {stats.transactionsLast24Hours} in last 24h
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Active Now
+                    Average Scans
                   </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -131,34 +188,73 @@ export default function page() {
                   </svg>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">+573</div>
-                  <p className="text-xs text-muted-foreground">
-                    +201 since last hour
-                  </p>
+                  <div className="text-2xl font-bold">
+                    {stats.averageScansPerTag.toFixed(1)}
+                  </div>
+                  <p className="text-xs text-muted-foreground">scans per tag</p>
                 </CardContent>
               </Card>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
-              <div className="col-span-4">
-                <BarGraph />
-              </div>
-              <Card className="col-span-4 md:col-span-3">
+              <Card className="col-span-4">
                 <CardHeader>
-                  <CardTitle>Recent Sales</CardTitle>
+                  <CardTitle>Daily Transactions</CardTitle>
                   <CardDescription>
-                    You made 265 sales this month.
+                    Transaction trends over the past 7 days
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RecentSales />
+                  <BarGraph data={stats.dailyTransactions} />
                 </CardContent>
               </Card>
-              <div className="col-span-4">
-                <AreaGraph />
-              </div>
-              <div className="col-span-4 md:col-span-3">
-                <PieGraph />
-              </div>
+              <Card className="col-span-4 md:col-span-3">
+                <CardHeader>
+                  <CardTitle>Product Distribution</CardTitle>
+                  <CardDescription>
+                    Distribution by product type
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PieGraph data={stats.productTypeDistribution} />
+                </CardContent>
+              </Card>
+              <Card className="col-span-4">
+                <CardHeader>
+                  <CardTitle>Hourly Activity</CardTitle>
+                  <CardDescription>
+                    Transaction activity by hour
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AreaGraph data={stats.hourlyTransactions} />
+                </CardContent>
+              </Card>
+              <Card className="col-span-4 md:col-span-3">
+                <CardHeader>
+                  <CardTitle>Most Active</CardTitle>
+                  <CardDescription>Top performing items</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium">Most Scanned Tag</p>
+                    <p className="text-2xl font-bold">
+                      {stats.mostScannedTag.epc}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {stats.mostScannedTag.scanCount} scans
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Top Product</p>
+                    <p className="text-2xl font-bold">
+                      {stats.productWithMostTags.productName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {stats.productWithMostTags.tagCount} transactions
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>

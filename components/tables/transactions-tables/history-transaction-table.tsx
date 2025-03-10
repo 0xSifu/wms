@@ -176,74 +176,82 @@ export function HistoryTransactionTable({
         </div>
       )}
 
-      <table className="w-full">
-        <thead>
-          <tr className="border-b bg-muted/50">
-            <th className="h-12 px-4">
-              <Checkbox
-                checked={
-                  selectedRows.length > 0 &&
-                  selectedRows.length === transactions.length &&
-                  transactions.length > 0
-                }
-                onCheckedChange={(checked) =>
-                  handleSelectAll(checked as boolean)
-                }
-              />
-            </th>
-            <th className="px-4 text-left">EPC</th>
-            <th className="px-4 text-left">RSSI</th>
-            <th className="px-4 text-left">Timestamp</th>
-            <th className="px-4 text-left">Mode</th>
-            <th className="px-4 text-left">Batch ID</th>
-          </tr>
-        </thead>
-        <tbody>
-          {isLoading ? (
+      <div className="relative">
+        <table className="w-full">
+          <thead className="sticky top-0 z-10 border-b bg-muted/50">
             <tr>
-              <td colSpan={6} className="h-24 text-center">
-                <Loader2 className="mx-auto h-6 w-6 animate-spin" />
-                <p className="mt-2">Loading transaction history...</p>
-              </td>
+              <th className="h-12 px-4">
+                <Checkbox
+                  checked={
+                    selectedRows.length > 0 &&
+                    selectedRows.length === transactions.length &&
+                    transactions.length > 0
+                  }
+                  onCheckedChange={(checked) =>
+                    handleSelectAll(checked as boolean)
+                  }
+                />
+              </th>
+              <th className="px-4 text-left">EPC</th>
+              <th className="px-4 text-left">RSSI</th>
+              <th className="px-4 text-left">Timestamp</th>
+              <th className="px-4 text-left">Mode</th>
+              <th className="px-4 text-left">Batch ID</th>
             </tr>
-          ) : transactions.length === 0 ? (
-            <tr>
-              <td colSpan={6} className="h-24 text-center">
-                No transaction history found.
-              </td>
-            </tr>
-          ) : (
-            transactions.map((transaction) => {
-              const id = transaction.id;
-              if (id === undefined) return null;
-
-              return (
-                <tr key={id} className="border-b">
-                  <td className="h-12 px-4">
-                    <Checkbox
-                      checked={selectedRows.some((t) => t.id === id)}
-                      onCheckedChange={(checked) =>
-                        handleRowSelect(transaction, checked as boolean)
-                      }
-                    />
-                  </td>
-                  <td className="px-4">{transaction.epc}</td>
-                  <td className="px-4">{transaction.rssi} dBm</td>
-                  <td className="px-4">{transaction.timestamp}</td>
-                  <td className="px-4">{transaction.mode}</td>
-                  <td className="px-4">
-                    {transaction.batchId ? (
-                      <Badge variant="outline">{transaction.batchId}</Badge>
-                    ) : (
-                      <span className="text-muted-foreground">No batch</span>
-                    )}
+          </thead>
+        </table>
+        <div className="max-h-[500px] overflow-y-auto">
+          <table className="w-full">
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="h-24 text-center">
+                    <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                    <p className="mt-2">Loading transaction history...</p>
                   </td>
                 </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+              ) : transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="h-24 text-center">
+                    No transaction history found.
+                  </td>
+                </tr>
+              ) : (
+                transactions.map((transaction) => {
+                  const id = transaction.id;
+                  if (id === undefined) return null;
+
+                  return (
+                    <tr key={id} className="border-b">
+                      <td className="h-12 px-4">
+                        <Checkbox
+                          checked={selectedRows.some((t) => t.id === id)}
+                          onCheckedChange={(checked) =>
+                            handleRowSelect(transaction, checked as boolean)
+                          }
+                        />
+                      </td>
+                      <td className="px-4">{transaction.epc}</td>
+                      <td className="px-4">{transaction.rssi} dBm</td>
+                      <td className="px-4">{transaction.timestamp}</td>
+                      <td className="px-4">{transaction.mode}</td>
+                      <td className="px-4">
+                        {transaction.batchId ? (
+                          <Badge variant="outline">{transaction.batchId}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            No batch
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Pagination Controls */}
       <div className="flex items-center justify-between border-t p-4">
