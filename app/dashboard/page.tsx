@@ -48,7 +48,7 @@ export default function DashboardPage() {
     const fetchStats = async () => {
       try {
         const response = await fetch(
-          'http://localhost:9001/api/v1/products/statistics'
+          'http://103.174.115.64:9001/api/v1/products/statistics'
         );
         const result = await response.json();
         setStats(result.data);
