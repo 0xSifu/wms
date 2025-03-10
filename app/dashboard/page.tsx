@@ -28,11 +28,11 @@ interface Statistics {
   mostScannedTag: {
     epc: string;
     scanCount: number;
-  };
+  } | null;
   productWithMostTags: {
     productName: string;
     tagCount: number;
-  };
+  } | null;
   transactionsLast24Hours: number;
   newTagsLast24Hours: number;
   dailyTransactions: Array<{ label: string; value: number }>;
@@ -48,7 +48,7 @@ export default function DashboardPage() {
     const fetchStats = async () => {
       try {
         const response = await fetch(
-          'http://103.174.115.64:9001/api/v1/products/statistics'
+          'http://localhost:9001/api/v1/products/statistics'
         );
         const result = await response.json();
         setStats(result.data);
@@ -204,7 +204,13 @@ export default function DashboardPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <BarGraph data={stats.dailyTransactions} />
+                  <BarGraph
+                    data={
+                      stats.dailyTransactions.length > 0
+                        ? stats.dailyTransactions
+                        : [{ label: 'No Data', value: 0 }]
+                    }
+                  />
                 </CardContent>
               </Card>
               <Card className="col-span-4 md:col-span-3">
@@ -215,7 +221,13 @@ export default function DashboardPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <PieGraph data={stats.productTypeDistribution} />
+                  <PieGraph
+                    data={
+                      stats.productTypeDistribution.length > 0
+                        ? stats.productTypeDistribution
+                        : [{ label: 'No Data', value: 0 }]
+                    }
+                  />
                 </CardContent>
               </Card>
               <Card className="col-span-4">
@@ -226,7 +238,13 @@ export default function DashboardPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <AreaGraph data={stats.hourlyTransactions} />
+                  <AreaGraph
+                    data={
+                      stats.hourlyTransactions.length > 0
+                        ? stats.hourlyTransactions
+                        : [{ label: 'No Data', value: 0 }]
+                    }
+                  />
                 </CardContent>
               </Card>
               <Card className="col-span-4 md:col-span-3">
@@ -238,19 +256,19 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-sm font-medium">Most Scanned Tag</p>
                     <p className="text-2xl font-bold">
-                      {stats.mostScannedTag.epc}
+                      {stats.mostScannedTag?.epc || 'No data'}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {stats.mostScannedTag.scanCount} scans
+                      {stats.mostScannedTag?.scanCount || 0} scans
                     </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Top Product</p>
                     <p className="text-2xl font-bold">
-                      {stats.productWithMostTags.productName}
+                      {stats.productWithMostTags?.productName || 'No data'}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {stats.productWithMostTags.tagCount} transactions
+                      {stats.productWithMostTags?.tagCount || 0} transactions
                     </p>
                   </div>
                 </CardContent>
